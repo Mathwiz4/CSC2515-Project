@@ -155,11 +155,14 @@ def visualize_model(model, num_images=6):
         model.train(mode=was_training)
 
 if __name__ == "__main__":
-    model_ft = models.resnet18(pretrained=True)
-    num_ftrs = model_ft.fc.in_features
+    model_ft = models.alexnet(pretrained=True)
+    #num_ftrs = model_ft.fc.in_features #Modifys classifier in resnet18
+    #model_ft.fc = nn.Linear(num_ftrs, len(class_names))
+    num_ftrs = model_ft.classifier[6].in_features #Modifys last classifier for alexnet
+    model_ft.classifier[6] = nn.Linear(num_ftrs, len(class_names))
+
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-    model_ft.fc = nn.Linear(num_ftrs, len(class_names))
 
     model_ft = model_ft.to(device)
 
