@@ -24,7 +24,7 @@ data_transforms = {
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
+    ])
 }
 
 #Data Directory
@@ -155,11 +155,12 @@ def visualize_model(model, num_images=6):
         model.train(mode=was_training)
 
 if __name__ == "__main__":
-    model_ft = models.alexnet(pretrained=True)
-    #num_ftrs = model_ft.fc.in_features #Modifys classifier in resnet18
-    #model_ft.fc = nn.Linear(num_ftrs, len(class_names))
-    num_ftrs = model_ft.classifier[6].in_features #Modifys last classifier for alexnet
-    model_ft.classifier[6] = nn.Linear(num_ftrs, len(class_names))
+    model_ft = models.resnet18(pretrained=True)
+    num_ftrs = model_ft.fc.in_features #Modifys classifier in resnet18
+    model_ft.fc = nn.Linear(num_ftrs, len(class_names))
+    #model_ft = models.alexnet(pretrained=True)
+    #num_ftrs = model_ft.classifier[6].in_features #Modifys last classifier for alexnet
+    #model_ft.classifier[6] = nn.Linear(num_ftrs, len(class_names))
 
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -175,4 +176,4 @@ if __name__ == "__main__":
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
     model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=25)
-    torch.save(model_ft, './models/test1.pth')
+    torch.save(model_ft, './models/resnet18_test1.pth')
