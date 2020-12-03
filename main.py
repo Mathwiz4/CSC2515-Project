@@ -12,6 +12,8 @@ import time
 import os
 import copy
 
+## This is Neel's copy.
+
 data_transforms = {
     'train': transforms.Compose([
         transforms.RandomResizedCrop(224),
