@@ -56,32 +56,31 @@ classes = train_datasets['train'].classes
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# for images, labels in test_loader['test']:
-#     print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
-#     imshow(torchvision.utils.make_grid(images))
-#     break
-
 model = models.resnet18(pretrained=False)
-model.load_state_dict(torch.load('models/resnet18_test1.pth'))
+num_ftrs = model.fc.in_features #Modifys classifier in resnet18
+model.fc = nn.Linear(num_ftrs, len(classes))
+model.load_state_dict(torch.load('models/resnet18_testbw.pth').state_dict())
 
 correct = 0
 total = 0
 
 with torch.no_grad():
-    for images, labels in test_loader:
+    for data in test_loader['test']:
+        images, labels = data
         output = model(images)
         _, predicted = torch.max(output.data, 1)
         total += labels.size(0)
-        correct += (predicted == labels).sum().item
+        correct += (predicted == labels).sum()
 
 class_correct = list(0. for i in range(len(classes)))
 class_total = list(0. for i in range(len(classes)))
 with torch.no_grad():
-    for images, labels in test_loader:
+    for data in test_loader['test']:
+        images, labels = data
         outputs = model(images)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()
-        for i in range(4):
+        for i in range(len(labels)):
             label = labels[i]
             class_correct[label] += c[i].item()
             class_total[label] += 1
