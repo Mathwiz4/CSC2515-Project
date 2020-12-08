@@ -74,6 +74,7 @@ with torch.no_grad():
 
 class_correct = list(0. for i in range(len(classes)))
 class_total = list(0. for i in range(len(classes)))
+
 with torch.no_grad():
     for data in test_loader['test']:
         images, labels = data
