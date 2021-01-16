@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import time
 import os
 import copy
+import pathlib
 
 data_transforms = {
     'train': transforms.Compose([
@@ -63,6 +64,8 @@ def imshow(inp, title=None):
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
+    t_loss = []
+    v_loss = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -109,6 +112,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
+            if phase == 'train':
+                t_loss.append(epoch_loss)
+            else:
+                v_loss.append(epoch_loss)
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc))
@@ -127,7 +134,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model
+    return model, t_loss, v_loss
 
 def visualize_model(model, num_images=6):
     was_training = model.training
@@ -156,16 +163,15 @@ def visualize_model(model, num_images=6):
                     return
         model.train(mode=was_training)
 
-def evaluate():
-    return
 
 if __name__ == "__main__":
-    #model_ft = models.resnet18(pretrained=True)
+    model_ft = models.densenet121(pretrained=True)
     #num_ftrs = model_ft.fc.in_features #Modifys classifier in resnet18
-    #model_ft.fc = nn.Linear(num_ftrs, len(class_names))
-    model_ft = models.alexnet(pretrained=True)
-    num_ftrs = model_ft.classifier[6].in_features #Modifys last classifier for alexnet
-    model_ft.classifier[6] = nn.Linear(num_ftrs, len(class_names))
+    num_ftrs = model_ft.classifier.in_features #Densenet121
+    model_ft.fc = nn.Linear(num_ftrs, len(class_names))
+    # model_ft = models.alexnet(pretrained=True)
+    # num_ftrs = model_ft.classifier[6].in_features #Modifys last classifier for alexnet
+    # model_ft.classifier[6] = nn.Linear(num_ftrs, len(class_names))
 
     # Here the size of each output sample is set to 2.
     # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -180,5 +186,19 @@ if __name__ == "__main__":
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-    model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=25)
-    torch.save(model_ft, './models/resnet18_testbw.pth')
+    model_ft, t_loss, v_loss = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=25)
+
+    epochs = np.linspace(1,25,25)
+    plt.plot(epochs, t_loss, label='Training Loss')
+    plt.plot(epochs, v_loss, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+    lossfile = open("./loss_densenet121.txt", 'w')
+    lossfile.write("train_loss val_loss \n")
+    for x,y in zip(t_loss, v_loss):
+        lossfile.write(str(x) + " " + str(y)+"\n")
+
+    torch.save(model_ft, './models/densenet121_testbw.pth')

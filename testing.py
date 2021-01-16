@@ -47,7 +47,7 @@ data_transforms = {
 
 
 #Data Directory
-test_data_dir = 'archive/dice'
+test_data_dir = 'archive/cube'
 train_data_dir = 'archive/dice'
 train_datasets = {x: datasets.ImageFolder(os.path.join(train_data_dir, x), data_transforms[x]) for x in ['train', 'val']}
 test_datasets = {x: datasets.ImageFolder(os.path.join(test_data_dir, x), data_transforms[x]) for x in ['test']}
@@ -56,38 +56,52 @@ classes = train_datasets['train'].classes
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-model = models.resnet18(pretrained=False)
-num_ftrs = model.fc.in_features #Modifys classifier in resnet18
+model = models.densenet121(pretrained=False)
+#num_ftrs = model.fc.in_features #Modifys classifier in resnet18
+num_ftrs = model.classifier.in_features
 model.fc = nn.Linear(num_ftrs, len(classes))
-model.load_state_dict(torch.load('models/resnet18_testbw.pth').state_dict())
+# num_ftrs = model.classifier[6].in_features #Modifys last classifier for alexnet
+# model.classifier[6] = nn.Linear(num_ftrs, len(classes))
+model.load_state_dict(torch.load('models/densenet121_testbw.pth').state_dict())
 
-correct = 0
-total = 0
 
-with torch.no_grad():
-    for data in test_loader['test']:
-        images, labels = data
-        output = model(images)
-        _, predicted = torch.max(output.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum()
+def test_all():
+    correct = 0
+    total = 0
 
-class_correct = list(0. for i in range(len(classes)))
-class_total = list(0. for i in range(len(classes)))
-with torch.no_grad():
-    for data in test_loader['test']:
-        images, labels = data
-        outputs = model(images)
-        _, predicted = torch.max(outputs, 1)
-        c = (predicted == labels).squeeze()
-        for i in range(len(labels)):
-            label = labels[i]
-            class_correct[label] += c[i].item()
-            class_total[label] += 1
+    with torch.no_grad():
+        for data in test_loader['test']:
+            images, labels = data
+            output = model(images)
+            _, predicted = torch.max(output.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum()
 
-for i in range(len(classes)):
-    print('Accuracy of %5s : %2d %%' % (
-        classes[i], 100 * class_correct[i] / class_total[i]))
+    class_correct = list(0. for i in range(len(classes)))
+    class_total = list(0. for i in range(len(classes)))
 
-print('Accuracy of the network on test images: %d %%' % (100*correct/total))
+    with torch.no_grad():
+        for data in test_loader['test']:
+            images, labels = data
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+            c = (predicted == labels).squeeze()
+            for i in range(len(labels)):
+                label = labels[i]
+                class_correct[label] += c[i].item()
+                class_total[label] += 1
 
+    for i in range(len(classes)):
+        print('Accuracy of %5s : %2d %%' % (
+            classes[i], 100 * class_correct[i] / class_total[i]))
+
+    print('Accuracy of the network on test images: %d %%' % (100*correct/total))
+
+if __name__ == '__main__':
+    #test_all()
+    with torch.no_grad():
+        for data in test_loader['test']:
+            images, labels = data
+            output = model(images)
+            _, predicted = torch.max(output.data, 1)
+            print(predicted, labels)
