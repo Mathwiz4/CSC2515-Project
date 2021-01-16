@@ -62,7 +62,7 @@ num_ftrs = model.classifier.in_features
 model.fc = nn.Linear(num_ftrs, len(classes))
 # num_ftrs = model.classifier[6].in_features #Modifys last classifier for alexnet
 # model.classifier[6] = nn.Linear(num_ftrs, len(classes))
-model.load_state_dict(torch.load('models/densenet121_testbw.pth').state_dict())
+model.load_state_dict(torch.load('models/densenet121_testbw.pth').state_dict()) #densenet121
 
 
 def test_all():
